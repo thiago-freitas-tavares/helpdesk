@@ -27,6 +27,6 @@ export const AppDataSource = new DataSource({
   database: dbDatabase,
   synchronize: false,
   logging: false,
-  entities: [],
-  migrations: [],
+  entities: [`${__dirname}/entities/*{.ts,.js}`], // caminho curinga que pega todas as entidades dentro de uma pasta específica
+  migrations: [`${__dirname}/migrations/*{.ts,.js}`],
 });
