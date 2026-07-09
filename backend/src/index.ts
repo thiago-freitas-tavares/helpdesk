@@ -4,7 +4,7 @@ import { AppDataSource } from './data-source';
 
 const app = express(); // representa a API
 
-app.use(express.json()); // permite que o Express entenda JSON no corpo das requisições.
+app.use(express.json()); // permite que o Express entenda JSON no corpo das requisições
 app.use(cors());
 
 app.get('/health', (request, response) => { // rota teste para verificar se a API está funcionando, roda o callback toda vez que chegar uma requisição GET /health 

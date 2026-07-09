@@ -20,8 +20,8 @@ export class User {
   role!: UserRole;
 
   @CreateDateColumn({ name:'created_at' }) // quando o nome da propriedade é diferente do nome da coluna no banco
-  createdAt!: string;
+  createdAt!: Date;
 
   @UpdateDateColumn({ name:'updated_at' })
-  updatedAt!: string;
+  updatedAt!: Date;
 }
