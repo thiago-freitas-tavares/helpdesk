@@ -16,7 +16,7 @@ export function errorMiddleware(
 
   console.error(error);
 
-  return response.status(500).json({
+  return response.status(500).json({ // 500 - Internal Server Error
     message: 'Erro interno',
   });
 }

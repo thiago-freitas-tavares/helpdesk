@@ -5,9 +5,9 @@ import { UserRole } from '../enums/UserRole';
 
 // pela regra de negócio, essas propriedades são obrigatórias, mas podem chegar vazias, por isso,  a ? indica que precisamos validar
 interface RegisterUserRequest { // tipagem dos dados que o cadastro recebe
-  name?: string;
-  email?: string;
-  password?: string;
+  name?: string | undefined;
+  email?: string | undefined;
+  password?: string | undefined;
 }
 
 interface RegisterUserResponse { // tipagem dos dados que o cadastro devolve (retiramos a senha)
@@ -30,7 +30,7 @@ export class AuthService { // responsável pelas regras de autenticação e cada
     const normalizedEmail = email?.trim().toLowerCase();
 
     if (!trimmedName) {
-      throw new AppError('Nome é obrigatório', 400);
+      throw new AppError('Nome é obrigatório', 400); // 400 - Bad Request
     }
 
     if (!normalizedEmail) {
@@ -52,7 +52,7 @@ export class AuthService { // responsável pelas regras de autenticação e cada
     const userAlreadyExists = await this.userRepository.findByEmail(normalizedEmail);
 
     if (userAlreadyExists) {
-      throw new AppError('E-mail já cadastrado', 409);
+      throw new AppError('E-mail já cadastrado', 409); // 409 - Conflict
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
