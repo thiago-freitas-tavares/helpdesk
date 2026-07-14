@@ -26,6 +26,14 @@ export class UserRepository {
     });
   }
 
+  public async findByEmailWithPassword(email: string): Promise<User | null> {
+    return this.repository
+      .createQueryBuilder('user') // consulta controlada para conseguirmos pegar a senha também como retorno e chamo a tabela users de user
+      .addSelect('user.password') // incluir a coluna password, além das colunas normais (na entidade User colocamos select: false), para comparar no login
+      .where('user.email = :email', { email })
+      .getOne(); // executa a query e retorna um único registro ou null
+  }
+
   public create(data: CreateUserData): User { // create não é assíncrono
     return this.repository.create(data); // monta a entidade User com os dados recebidos
   }

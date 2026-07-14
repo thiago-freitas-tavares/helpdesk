@@ -1,4 +1,6 @@
-import bcrypt from 'bcryptjs';
+import { compare, hash } from 'bcryptjs';
+import { sign } from 'jsonwebtoken'; // função que gera token JWT
+import type { SignOptions } from 'jsonwebtoken'; // para tipar o tempo de expiração do token nesse caso
 import { AppError } from '../errors/AppError';
 import { UserRepository } from '../repositories/UserRepository';
 import { UserRole } from '../enums/UserRole';
@@ -10,13 +12,23 @@ interface RegisterUserRequest { // tipagem dos dados que o cadastro recebe
   password?: string | undefined;
 }
 
-interface RegisterUserResponse { // tipagem dos dados que o cadastro devolve (retiramos a senha)
+interface LoginUserRequest {
+  email?: string | undefined;
+  password?: string | undefined;
+}
+
+interface UserResponse { // tipagem dos dados que o cadastro/login devolve (retiramos a senha)
   id: number;
   name: string;
   email: string;
-  role: UserRole;
+  role: UserRole; // por enquanto todos vem com a role padrão CUSTOMER. As demais serão configuradas por rota protegida.
   createdAt: Date;
   updatedAt: Date;
+}
+
+interface LoginUserResponse {
+  user: UserResponse;
+  token: string;
 }
 
 export class AuthService { // responsável pelas regras de autenticação e cadastro
@@ -25,7 +37,7 @@ export class AuthService { // responsável pelas regras de autenticação e cada
     private readonly userRepository: UserRepository = new UserRepository() // declaração e atribuição direto no construtor (parameter property) não acessa o TypeORM diretamente
   ) {}
 
-  public async register({ name, email, password }: RegisterUserRequest): Promise<RegisterUserResponse> {
+  public async register({ name, email, password }: RegisterUserRequest): Promise<UserResponse> {
     const trimmedName = name?.trim(); // ? evita erro, caso seja undefined
     const normalizedEmail = email?.trim().toLowerCase();
 
@@ -55,7 +67,7 @@ export class AuthService { // responsável pelas regras de autenticação e cada
       throw new AppError('E-mail já cadastrado', 409); // 409 - Conflict
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hash(password, 10); // o segundo argumento é o salt rounds, que é o custo de processamento do hash
 
     const user = this.userRepository.create({
       name: trimmedName,
@@ -65,18 +77,84 @@ export class AuthService { // responsável pelas regras de autenticação e cada
 
     const savedUser = await this.userRepository.save(user);
 
+    return this.toUserResponse(savedUser);
+  }
+
+  public async login({
+    email,
+    password,
+  }: LoginUserRequest): Promise<LoginUserResponse> {
+    const normalizedEmail = email?.trim().toLowerCase();
+
+    if (!normalizedEmail) {
+      throw new AppError('E-mail é obrigatório', 400);
+    }
+
+    if (!password || password.trim().length === 0) {
+      throw new AppError('Senha é obrigatória', 400);
+    }
+
+    const user = await this.userRepository.findByEmailWithPassword(normalizedEmail);
+
+    if (!user) {
+      throw new AppError('E-mail ou senha inválidos', 401); // 401 - Unauthorized
+    }
+
+    const passwordMatches = await compare(password, user.password); // retorna true ou false
+
+    if (!passwordMatches) {
+      throw new AppError('E-mail ou senha inválidos', 401);
+    }
+
+    const jwtSecret = process.env.JWT_SECRET;
+
+    if (!jwtSecret) {
+      throw new AppError('Configuração de autenticação inválida', 500);
+    }
+
+    // se existir JWT_EXPIRES_IN no .env, pega ele, senão usa 1d / SignOptions serve para o TypeScript conferir se estão sendo passados opções válidas para o JWT
+    const expiresIn = (process.env.JWT_EXPIRES_IN ?? '1d') as NonNullable<SignOptions['expiresIn']>; // NonNullable, pois o TypeScript estava reclamando que SignOptions['expiresIn'] pode incluir undefined
+
+    const tokenOptions: SignOptions = {
+      expiresIn,
+    };
+
+    const token = sign( // gera o token com 3 partes - ({payload}, chave secreta, {opções}, callback) / opções - expiresIn, subject, audience, issuer, etc
+      {
+        sub: String(user.id), // claim subject = dono da token
+        role: user.role, // claim role colocado no payload do token, pois será últil para autorização de rotas protegidas
+      },
+      jwtSecret,
+      tokenOptions, // o TypeScript pode ficar confuso se o terceiro argumento é opção ou callback e apontar erro, por isso criamos o tokenOptions
+    );
+
     return {
-      id: savedUser.id,
-      name: savedUser.name,
-      email: savedUser.email,
-      role: savedUser.role, // por enquanto todos vem com a role padrão CUSTOMER. As demais serão configuradas por rota protegida.
-      createdAt: savedUser.createdAt,
-      updatedAt: savedUser.updatedAt,
+      user: this.toUserResponse(user), // toUserResponse monta o objeto sem senha
+      token, // será salvo pelo frontend no localStorage
     };
   }
+
   private isEmailValid(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     return emailRegex.test(email);
+  }
+
+  private toUserResponse(user: { // para evitar repetição, será usado pelo register e login
+    id: number;
+    name: string;
+    email: string;
+    role: UserRole;
+    createdAt: Date;
+    updatedAt: Date;
+  }): UserResponse {
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
   }
 }
