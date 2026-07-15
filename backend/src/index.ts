@@ -13,7 +13,7 @@ app.get('/health', (request, response) => { // rota teste para verificar se a AP
   return response.json({ status: 'ok' });
 });
 
-app.use('/auth', authRoutes); // a rota será POST /auth/register
+app.use('/auth', authRoutes);
 
 // o errorMiddleware deve ficar depois de todos os middlewares e rotas do express (requisição chega - express.json - cors - rotas - rota/service/controller gerar erro - errorMiddleware)
 app.use(errorMiddleware);
