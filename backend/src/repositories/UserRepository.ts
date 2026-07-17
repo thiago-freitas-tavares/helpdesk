@@ -11,7 +11,7 @@ interface CreateUserData { // interface para tipar os dados necessários para cr
   password: string;
 }
 
-export class UserRepository {
+export class UserRepository { // operações do banco relacionadas a usuários
   private readonly repository: Repository<User>; // declaração e tipagem da propriedade repository
 
   constructor() {
@@ -25,20 +25,28 @@ export class UserRepository {
       }
     });
   }
-
+  
   public async findByEmailWithPassword(email: string): Promise<User | null> {
     return this.repository
-      .createQueryBuilder('user') // consulta controlada para conseguirmos pegar a senha também como retorno e chamo a tabela users de user
-      .addSelect('user.password') // incluir a coluna password, além das colunas normais (na entidade User colocamos select: false), para comparar no login
-      .where('user.email = :email', { email })
-      .getOne(); // executa a query e retorna um único registro ou null
+    .createQueryBuilder('user') // consulta controlada para conseguirmos pegar a senha também como retorno e chamo a tabela users de user
+    .addSelect('user.password') // incluir a coluna password, além das colunas normais (na entidade User colocamos select: false), para comparar no login
+    .where('user.email = :email', { email })
+    .getOne(); // executa a query e retorna um único registro ou null
+  }
+  
+  public async findById(id: number): Promise<User | null> { // será usado no TicketService para garantir que o usuário autenticado existe antes de criar um chamado
+    return this.repository.findOne({
+      where: {
+        id,
+      },
+    });
   }
 
   public create(data: CreateUserData): User { // create não é assíncrono
-    return this.repository.create(data); // monta a entidade User com os dados recebidos
+    return this.repository.create(data); // monta a entidade User com os dados recebidos (não salva no banco, apenas cria a instância)
   }
 
-  public async save(user: User): Promise<User> {
-    return this.repository.save(user); // TypeORM executa o INSERT na tabela users.
+  public async save(user: User): Promise<User> { // salvar no banco é assíncrono
+    return this.repository.save(user); // TypeORM executa o INSERT na tabela users
   }
 }

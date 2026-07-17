@@ -5,7 +5,7 @@ import { AppError } from '../errors/AppError';
 import { UserRepository } from '../repositories/UserRepository';
 import { UserRole } from '../enums/UserRole';
 
-// pela regra de negócio, essas propriedades são obrigatórias, mas podem chegar vazias, por isso,  a ? indica que precisamos validar
+// pela regra de negócio, essas propriedades são obrigatórias, mas podem chegar vazias, por isso, a ? indica que precisamos validar
 interface RegisterUserRequest { // tipagem dos dados que o cadastro recebe
   name?: string | undefined;
   email?: string | undefined;
@@ -34,13 +34,15 @@ interface LoginUserResponse {
 export class AuthService { // responsável pelas regras de autenticação e cadastro
   
   constructor(
-    private readonly userRepository: UserRepository = new UserRepository() // declaração e atribuição direto no construtor (parameter property) não acessa o TypeORM diretamente
+    // cria propriedade do tipo UserRepository e depois cria a instância direto no construtor (parameter property), não acessa o TypeORM diretamente
+    private readonly userRepository: UserRepository = new UserRepository()
   ) {}
 
-  public async register({ name, email, password }: RegisterUserRequest): Promise<UserResponse> {
-    const trimmedName = name?.trim(); // ? evita erro, caso seja undefined
+  public async register({ name, email, password }: RegisterUserRequest): Promise<UserResponse> { // método com desestruturação de dados recebidos aos invés de receber data: RegisterUserRequest
+    const trimmedName = name?.trim(); // ? só executa o trim se name existir, se name = undefined, trimmedName = undefined
     const normalizedEmail = email?.trim().toLowerCase();
 
+    // não preciso colocar try/catch, pois o controller que chama este service já está dentro de um try/catch, os erros são enviados automaticamente para serem tratados lá
     if (!trimmedName) {
       throw new AppError('Nome é obrigatório', 400); // 400 - Bad Request
     }
@@ -69,21 +71,18 @@ export class AuthService { // responsável pelas regras de autenticação e cada
 
     const hashedPassword = await hash(password, 10); // o segundo argumento é o salt rounds, que é o custo de processamento do hash
 
-    const user = this.userRepository.create({
+    const user = this.userRepository.create({ // cria o objeto user
       name: trimmedName,
       email: normalizedEmail,
       password: hashedPassword,
     });
 
-    const savedUser = await this.userRepository.save(user);
+    const savedUser = await this.userRepository.save(user); // salva o objeto user no banco e recebe com id, createdAt e updatedAt
 
-    return this.toUserResponse(savedUser);
+    return this.toUserResponse(savedUser); // converte o usuário salvo para um formato seguro de resposta, configurado abaixo
   }
 
-  public async login({
-    email,
-    password,
-  }: LoginUserRequest): Promise<LoginUserResponse> {
+  public async login({ email, password }: LoginUserRequest): Promise<LoginUserResponse> {
     const normalizedEmail = email?.trim().toLowerCase();
 
     if (!normalizedEmail) {

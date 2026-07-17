@@ -3,6 +3,7 @@ import express from 'express'; // cria o servidor HTTP e as rotas da API
 import { AppDataSource } from './data-source';
 import { errorMiddleware } from './middlewares/errorMiddleware';
 import { authRoutes } from './routes/auth.routes';
+import { ticketRoutes } from './routes/ticket.routes';
 
 const app = express(); // representa a API
 
@@ -14,6 +15,7 @@ app.get('/health', (request, response) => { // rota teste para verificar se a AP
 });
 
 app.use('/auth', authRoutes);
+app.use('/tickets', ticketRoutes);
 
 // o errorMiddleware deve ficar depois de todos os middlewares e rotas do express (requisição chega - express.json - cors - rotas - rota/service/controller gerar erro - errorMiddleware)
 app.use(errorMiddleware);
