@@ -76,6 +76,12 @@ export class TicketService {
     return this.toTicketResponse(savedTicket);
   }
 
+  public async list(): Promise<TicketResponse[]> { // não recebe parâmetro e retorna um array no formato de resposta da API TicketResponse
+    const tickets = await this.ticketRepository.findAll();
+
+    return tickets.map((ticket) => this.toTicketResponse(ticket)); // percorre cada ticket da lista tickets e converte o formato (basicamente, tira o createdAt e updratedAt do requester e assignee)
+  }
+
   private toTicketResponse(ticket: { //recebe um objeto ticket e transforma ele no formato TicketResponse
     id: number;
     title: string;

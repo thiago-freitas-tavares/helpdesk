@@ -14,6 +14,14 @@ export class TicketRepository {
     private readonly repository: Repository<Ticket> = AppDataSource.getRepository(Ticket)
   ) {}
 
+  
+  public create(data: CreateTicketData): Ticket {
+    return this.repository.create(data);
+  }
+  
+  public async save(ticket: Ticket): Promise<Ticket> {
+    return this.repository.save(ticket); // TypeORM executa o INSERT na tabela tickets e retorna o chamado salvo, já com id, createdAt e updatedAt
+  }
   public async findById(id: number): Promise<Ticket | null> { // para confirmar se o chamado existe antes de adicionar um comentário
     return this.repository.findOne({
       where: {
@@ -22,11 +30,15 @@ export class TicketRepository {
     });
   }
 
-  public create(data: CreateTicketData): Ticket {
-    return this.repository.create(data);
-  }
-
-  public async save(ticket: Ticket): Promise<Ticket> {
-    return this.repository.save(ticket); // TypeORM executa o INSERT na tabela tickets e retorna o chamado salvo, já com id, createdAt e updatedAt
+  public async findAll(): Promise<Ticket[]> { // não recebe parâmetro e retorna um array da entidade do banco Ticket
+    return this.repository.find({
+      relations: { // relações que queremos carregar junto com o chamado, por padrão o TypeORM pode não trazer automaticamente
+        requester: true,
+        assignee: true,
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+    });
   }
 }

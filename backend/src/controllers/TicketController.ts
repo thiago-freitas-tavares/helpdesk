@@ -40,4 +40,19 @@ export class TicketController { // contém as rotas relacionadas a chamados
       next(error);
     }
   };
+
+  public list = async (
+    _request: Request,
+    response: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const tickets = await this.ticketService.list();
+
+      response.status(200).json(tickets);
+    } catch (error) {
+      next(error);
+    }
+  };
+
 }
