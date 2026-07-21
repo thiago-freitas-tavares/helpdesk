@@ -40,4 +40,20 @@ export class CommentController { // métodos de rota relacionados a comentários
       next(error);
     }
   }
+
+   public listByTicketId = async (
+    request: Request<CreateCommentParams>,
+    response: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      const { ticketId } = request.params;
+
+      const comments = await this.commentService.listByTicketId({ ticketId: Number(ticketId) }); // nesse caso tive que colocar um objeto, pois é o argumento que o método pede
+
+      response.status(200).json(comments);
+    } catch (error) {
+      next(error);
+    }
+  };
 }

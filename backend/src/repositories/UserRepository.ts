@@ -18,6 +18,14 @@ export class UserRepository { // operações do banco relacionadas a usuários
     this.repository = AppDataSource.getRepository(User); // atribuição dos dados da entidade User na propriedade repository
   }
 
+  public create(data: CreateUserData): User { // create não é assíncrono
+    return this.repository.create(data); // monta a entidade User com os dados recebidos (não salva no banco, apenas cria a instância)
+  }
+
+  public async save(user: User): Promise<User> { // salvar no banco é assíncrono
+    return this.repository.save(user); // TypeORM executa o INSERT na tabela users
+  }
+  
   public async findByEmail(email: string): Promise<User | null> { // método que recebe email e retorna User ou null a partir de consulta assíncrona ao banco
     return this.repository.findOne({
       where: {
@@ -42,11 +50,4 @@ export class UserRepository { // operações do banco relacionadas a usuários
     });
   }
 
-  public create(data: CreateUserData): User { // create não é assíncrono
-    return this.repository.create(data); // monta a entidade User com os dados recebidos (não salva no banco, apenas cria a instância)
-  }
-
-  public async save(user: User): Promise<User> { // salvar no banco é assíncrono
-    return this.repository.save(user); // TypeORM executa o INSERT na tabela users
-  }
 }

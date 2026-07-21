@@ -46,7 +46,7 @@ export class TicketController { // contém as rotas relacionadas a chamados
   };
 
   public findById = async (
-    request: Request,
+    request: Request<FindTicketParams>,
     response: Response,
     next: NextFunction,
   ): Promise<void> => {

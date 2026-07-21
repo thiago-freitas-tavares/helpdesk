@@ -19,4 +19,21 @@ export class CommentRepository { // operações de banco relacionadas a comentá
   public async save(comment: Comment): Promise<Comment> {
     return this.repository.save(comment); // TypeORM executa o INSERT na tabela comments e retorna o comentário salvo, já com id, createdAt e updatedAt
   }
+
+  public async findByTicketId(ticketId: number): Promise<Comment[]> { //// recebe id do ticket como parâmetro e retorna um array da entidade do banco Comment
+  return this.repository.find({
+    where: {
+      ticket: {
+        id: ticketId,
+      },
+    },
+    relations: {
+      ticket: true, // ticket_id está como ticket na entidade Comment.ts
+      author: true, // author_id está como author na entidade Comment.ts
+    },
+    order: {
+      createdAt: 'ASC',
+    },
+  });
+}
 }

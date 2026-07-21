@@ -4,20 +4,24 @@ import { CommentRepository } from '../repositories/CommentRepository';
 import { TicketRepository } from '../repositories/TicketRepository';
 import { UserRepository } from '../repositories/UserRepository';
 
-interface CreateCommentRequest { // interface com os dados que o service espera receber para criar um comentário
+interface ListCommentsByTicketRequest { // interface com o formato dos dados que o service precisa receber para listar comentários de um chamado
+  ticketId: number;
+}
+
+interface CreateCommentRequest { // interface com o formato dos dados que o service espera receber para criar um comentário
   content?: string | undefined; // pode vir inválido, depois vamos validar
   ticketId: number; // vem da URL /tickets/:ticketId/comments
   authorId: number; // vem do token JWT, através do request.user.id
 }
 
-interface UserSummaryResponse { // interface com os dados que interessam do usuário na resposta
+interface UserSummaryResponse { // interface com o formato dos dados que interessam do usuário na resposta
   id: number;
   name: string;
   email: string;
   role: UserRole;
 }
 
-interface TicketSummaryResponse { // interface com os dados que interessam do ticket na resposta
+interface TicketSummaryResponse { // interface com o formato dos dados que interessam do ticket na resposta
   id: number;
   title: string;
 }
@@ -73,6 +77,22 @@ export class CommentService {
 
     return this.toCommentResponse(savedComment); // formata o comentário salvo para o formato de resposta da API
   }
+
+  public async listByTicketId({ ticketId }: ListCommentsByTicketRequest): Promise<CommentResponse[]> { // colocando apenas ticketId no parâmetro significa que o método espera receber um objeto
+  if (!Number.isInteger(ticketId) || ticketId <= 0) {
+    throw new AppError('Chamado inválido', 400);
+  }
+
+  const ticket = await this.ticketRepository.findById(ticketId); // somente para validar
+
+  if (!ticket) {
+    throw new AppError('Chamado não encontrado', 404);
+  }
+
+  const comments = await this.commentRepository.findByTicketId(ticketId);
+
+  return comments.map((comment) => this.toCommentResponse(comment)); // formata os comentários
+}
 
   private toCommentResponse(comment: {
     id: number;

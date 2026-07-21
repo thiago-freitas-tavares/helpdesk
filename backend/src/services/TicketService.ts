@@ -76,7 +76,7 @@ export class TicketService {
     return this.toTicketResponse(savedTicket);
   }
 
-  public async findById(id: number): Promise<TicketResponse> {
+  public async findById(id: number): Promise<TicketResponse> { // // colocando id: number no parâmetro significa que o método espera receber um valor
     if (!Number.isInteger(id) || id <= 0) {
       throw new AppError('Chamado inválido', 400);
     }
