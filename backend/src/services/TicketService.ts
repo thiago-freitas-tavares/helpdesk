@@ -76,6 +76,20 @@ export class TicketService {
     return this.toTicketResponse(savedTicket);
   }
 
+  public async findById(id: number): Promise<TicketResponse> {
+    if (!Number.isInteger(id) || id <= 0) {
+      throw new AppError('Chamado inválido', 400);
+    }
+
+    const ticket = await this.ticketRepository.findById(id); // não tem problema chamar essa propriedade de ticket, mesmo tendo uma propriedade ticket na função create
+
+    if (!ticket) {
+      throw new AppError('Chamado não encontrado', 404);
+    }
+
+    return this.toTicketResponse(ticket);
+  }
+
   public async list(): Promise<TicketResponse[]> { // não recebe parâmetro e retorna um array no formato de resposta da API TicketResponse
     const tickets = await this.ticketRepository.findAll();
 

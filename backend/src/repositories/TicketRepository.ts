@@ -27,6 +27,10 @@ export class TicketRepository {
       where: {
         id,
       },
+      relations: { // incluir no retorno quando buscamos um chamado específico
+        requester: true,
+        assignee: true,
+      }
     });
   }
 
