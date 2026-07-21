@@ -1,5 +1,6 @@
 import { TicketPriority } from '../enums/TicketPriority';
 import { TicketStatus } from '../enums/TicketStatus';
+import { UserRole } from '../enums/UserRole';
 import { AppError } from '../errors/AppError';
 import { TicketRepository } from '../repositories/TicketRepository';
 import { UserRepository } from '../repositories/UserRepository'; // para buscar o usuário autenticado pelo ID
@@ -11,11 +12,11 @@ interface CreateTicketRequest { // interface com os dados que o service espera r
   requesterId: number; // vem do token JWT, através do request.user.id
 }
 
-interface UserSummaryResponse {// interface com os dados que interessam do usuário na resposta
+interface UserSummaryResponse { // interface com os dados que interessam do usuário na resposta
   id: number;
   name: string;
   email: string;
-  role: string; // posso usar string aqui ao invés de UserRole, pois o valor vem do enum salvo na entidade
+  role: UserRole;
 }
 
 interface TicketResponse { // interface que define como o service vai devolver o chamado criado
@@ -85,13 +86,13 @@ export class TicketService {
       id: number;
       name: string;
       email: string;
-      role: string;
+      role: UserRole;
     };
     assignee: {
       id: number;
       name: string;
       email: string;
-      role: string;
+      role: UserRole;
     } | null;
     createdAt: Date;
     updatedAt: Date;
