@@ -1,17 +1,29 @@
 import { NextFunction, Request, Response } from "express";
-import { TicketPriority } from "../enums/TicketPriority";
 import { TicketService } from "../services/TicketService";
 import { AppError } from "../errors/AppError";
-import { request } from "http";
+import { TicketPriority } from "../enums/TicketPriority";
+import { TicketStatus } from "../enums/TicketStatus";
+import { authMiddleware } from "../middlewares/authMiddleware";
 
 interface FindTicketParams {
-  id?: string | undefined, // GET /tickets/1 chega como request.params.id = '1'
+  id?: string | undefined; // GET /tickets/1 chega como request.params.id = '1'
 }
 
 interface CreateTicketBody { // body esperado da requisição POST /tickets.
   title?: string | undefined;
   description?: string | undefined;
   priority?: TicketPriority | undefined; 
+}
+
+interface UpdateTicketParams { // vem da URL
+  id?: string | undefined;
+}
+
+interface UpdateTicketBody {
+  title?: string | undefined;
+  description?: string | undefined;
+  status?: TicketStatus | undefined;
+  priority?: TicketPriority | undefined;
 }
 
 export class TicketController { // contém as rotas relacionadas a chamados
@@ -74,4 +86,32 @@ export class TicketController { // contém as rotas relacionadas a chamados
       next(error);
     }
   };
+
+  public update = async (
+    request: Request<UpdateTicketParams, unknown, UpdateTicketBody>, // id = parâmetro - title, description, status, priority = body
+    response: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      if (!request.user) { // o TypesScript reclama que 'authenticatedUserId: request.user.id' pode ser undefined se eu não fizer essa validação aqui
+        throw new AppError('Usuário não autenticado', 401);
+      }
+
+      const { id } = request.params;
+      const { title, description, status, priority } = request.body;
+
+      const ticket = await this.ticketService.update({
+        id: Number(id),
+        authenticatedUserId: request.user.id,
+        title,
+        description,
+        status,
+        priority,
+      });
+
+      response.status(200).json(ticket);
+    } catch (error) {
+      next(error);
+    }
+  }
 }

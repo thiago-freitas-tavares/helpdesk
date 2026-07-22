@@ -9,5 +9,6 @@ const ticketController = new TicketController();
 ticketRoutes.post('/', authMiddleware, ticketController.create); // no index.ts será colocada a rota /tickets, dessa forma, essa rota também fica /tickets
 ticketRoutes.get('/', authMiddleware, ticketController.list); // get busca dados - caminho final /tickets
 ticketRoutes.get('/:id', authMiddleware, ticketController.findById); // usamos id no ticketController e essa rota diz respeito somente a ticket
+ticketRoutes.patch('/:id', authMiddleware, ticketController.update); // patch representa alteração parcial (alguns campos), enquanto que put seria alteração total (todos os campos)
 
 export { ticketRoutes };

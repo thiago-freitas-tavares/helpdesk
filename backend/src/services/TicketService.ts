@@ -5,14 +5,14 @@ import { AppError } from '../errors/AppError';
 import { TicketRepository } from '../repositories/TicketRepository';
 import { UserRepository } from '../repositories/UserRepository'; // para buscar o usuário autenticado pelo ID
 
-interface CreateTicketRequest { // interface com os dados que o service espera receber para criar um chamado
+interface CreateTicketRequest { // interface com o formato dos dados que o service espera receber para criar um chamado
   title?: string | undefined;
   description?: string | undefined;
   priority?: TicketPriority | undefined; // padrão é MEDIUM
   requesterId: number; // vem do token JWT, através do request.user.id
 }
 
-interface UserSummaryResponse { // interface com os dados que interessam do usuário na resposta
+interface UserSummaryResponse { // interface com o formato dos dados que interessam do usuário na resposta
   id: number;
   name: string;
   email: string;
@@ -29,6 +29,15 @@ interface TicketResponse { // interface que define como o service vai devolver o
   assignee: UserSummaryResponse | null;
   createdAt: Date;
   updatedAt: Date;
+}
+
+interface UpdateTicketRequest { // interface com o formato dos dados que o service precisa receber para atualizar um ticket
+  id: number;
+  authenticatedUserId: number; // representa o id do usuário que está logado no momento
+  title?: string | undefined;
+  description?: string | undefined;
+  status?: TicketStatus | undefined;
+  priority?: TicketPriority | undefined;
 }
 
 export class TicketService {
@@ -84,7 +93,7 @@ export class TicketService {
     const ticket = await this.ticketRepository.findById(id); // não tem problema chamar essa propriedade de ticket, mesmo tendo uma propriedade ticket na função create
 
     if (!ticket) {
-      throw new AppError('Chamado não encontrado', 404);
+      throw new AppError('Chamado não encontrado', 404); // 404 - Not Found
     }
 
     return this.toTicketResponse(ticket);
@@ -94,6 +103,66 @@ export class TicketService {
     const tickets = await this.ticketRepository.findAll();
 
     return tickets.map((ticket) => this.toTicketResponse(ticket)); // percorre cada ticket da lista tickets e converte o formato (basicamente, tira o createdAt e updratedAt do requester e assignee)
+  }
+
+  public async update({ id, authenticatedUserId, title, description, status, priority }: UpdateTicketRequest): Promise<TicketResponse> { // destructuring do objeto recebido
+    if (!Number.isInteger(id) || id <= 0) {
+      throw new AppError('Chamado inválido', 400);
+    }
+
+    if (title === undefined && description === undefined && status === undefined && priority === undefined) {
+      throw new AppError('Informe ao menos um campo para atualização', 400);
+    }
+
+    const ticket = await this.ticketRepository.findById(id);
+
+    if (!ticket) {
+      throw new AppError('Chamado não encontrado', 404);
+    }
+
+    if (ticket.requester.id !== authenticatedUserId) { // verifica se o usuário logado é o mesmo que criou o chamado
+      throw new AppError('Você não tem permissão para editar este chamado', 403); // 403 - Forbidden
+    }
+
+    if (title !== undefined) { // verifica se o campo title veio no JSON
+      const trimmedTitle = title.trim();
+
+      if (!trimmedTitle) { // verifica se o título ficou vazio depois do trim
+        throw new AppError('Título é obrigatório', 400);
+      }
+
+      ticket.title = trimmedTitle; // atualiza o título do objeto ticket na memória
+    }
+
+    if (description !== undefined) {
+      const trimmedDescription = description.trim();
+
+      if (!trimmedDescription) {
+        throw new AppError('Descrição é obrigatória', 400);
+      }
+
+      ticket.description = trimmedDescription;
+    }
+
+    if (status !== undefined) {
+      if (!Object.values(TicketStatus).includes(status)) {
+        throw new AppError('Status inválido', 400);
+      }
+
+      ticket.status = status;
+    }
+
+    if (priority !== undefined) {
+      if (!Object.values(TicketPriority).includes(priority)) {
+        throw new AppError('Prioridade inválida', 400);
+      }
+
+      ticket.priority = priority;
+    }
+
+    const updatedTicket = await this.ticketRepository.save(ticket); // atualiza o objeto ticket no banco, uma vez que já tem id
+
+    return this.toTicketResponse(updatedTicket);
   }
 
   private toTicketResponse(ticket: { //recebe um objeto ticket e transforma ele no formato TicketResponse
