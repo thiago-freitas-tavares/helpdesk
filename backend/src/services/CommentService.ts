@@ -35,6 +35,12 @@ interface CommentResponse { // interface que define como o service vai devolver 
   updatedAt: Date;
 }
 
+interface DeleteCommentRequest { // interface com o formato dos dados que o service precisa receber para deletar um comentário
+  ticketId: number, // vem da URL
+  commentId: number, // vem da URL
+  authenticatedUserId: number, // vem do request.user.id e garante que somente o autor exclua o comentário
+}
+
 export class CommentService {
   
   constructor(
@@ -79,20 +85,48 @@ export class CommentService {
   }
 
   public async listByTicketId({ ticketId }: ListCommentsByTicketRequest): Promise<CommentResponse[]> { // colocando apenas ticketId no parâmetro significa que o método espera receber um objeto
-  if (!Number.isInteger(ticketId) || ticketId <= 0) {
-    throw new AppError('Chamado inválido', 400);
+    if (!Number.isInteger(ticketId) || ticketId <= 0) {
+      throw new AppError('Chamado inválido', 400);
+    }
+
+    const ticket = await this.ticketRepository.findById(ticketId); // somente para validar
+
+    if (!ticket) {
+      throw new AppError('Chamado não encontrado', 404);
+    }
+
+    const comments = await this.commentRepository.findByTicketId(ticketId);
+
+    return comments.map((comment) => this.toCommentResponse(comment)); // formata os comentários
   }
+  
+  public async delete({ ticketId, commentId, authenticatedUserId }: DeleteCommentRequest): Promise<void> {
+    if (!Number.isInteger(ticketId) || ticketId <= 0) {
+      throw new AppError('Chamado inválido', 400);
+    }
 
-  const ticket = await this.ticketRepository.findById(ticketId); // somente para validar
+    if (!Number.isInteger(commentId) || commentId <= 0) {
+      throw new AppError('Comentário inválido', 400);
+    }
 
-  if (!ticket) {
-    throw new AppError('Chamado não encontrado', 404);
+    const ticket = await this.ticketRepository.findById(ticketId); // pega o ticket do repositório para checar se ele existe (acesso a ticket.id)
+
+    if (!ticket) {
+      throw new AppError('Chamado não encontrado', 404);
+    }
+
+    const comment = await this.commentRepository.findById(commentId); // pega o comment do repositório para checar se ele existe (acesso a comment.ticket.id)
+
+    if (!comment || comment.ticket.id !== ticket.id) { // compara se o id do chamado do comentário da URL é igual ao id do chamado da URL passado como parâmetro
+      throw new AppError('Comentário não encontrado', 404);
+    }
+
+    if (comment.author.id !== authenticatedUserId) { // compara se o id do author do comentário da URL é igual ao id do usuário autenticado pelo token JWT no authMiddleware (request.user.id)
+      throw new AppError('Você não tem permissão para excluir este comentário', 403); // 403 - Forbidden
+    }
+
+    await this.commentRepository.remove(comment);
   }
-
-  const comments = await this.commentRepository.findByTicketId(ticketId);
-
-  return comments.map((comment) => this.toCommentResponse(comment)); // formata os comentários
-}
 
   private toCommentResponse(comment: {
     id: number;
