@@ -3,7 +3,6 @@ import { TicketService } from "../services/TicketService";
 import { AppError } from "../errors/AppError";
 import { TicketPriority } from "../enums/TicketPriority";
 import { TicketStatus } from "../enums/TicketStatus";
-import { authMiddleware } from "../middlewares/authMiddleware";
 
 interface TicketIdParams { // FindTicketParams, UpdateTicketParams e DeleteTicketParams possuem exatamente a mesma estrutura, por isso, criamos uma mais genérica para usar em todas
   id?: string | undefined; // GET /tickets/1 chega como request.params.id = '1'
@@ -15,11 +14,17 @@ interface CreateTicketBody { // body esperado da requisição POST /tickets.
   priority?: TicketPriority | undefined; 
 }
 
-interface UpdateTicketBody {
+interface UpdateTicketBody { // vem do JSON
   title?: string | undefined;
   description?: string | undefined;
   status?: TicketStatus | undefined;
   priority?: TicketPriority | undefined;
+}
+
+interface ListTicketsQuery { // interface para os parâmetros de query da rota - query params são os valores que vem depois da ? na URL
+  status?: string | undefined; // representa GET /tickets?status=OPEN por exemplo
+  priority?: string | undefined;
+  createdAtOrder?: string | undefined;
 }
 
 export class TicketController { // contém as rotas relacionadas a chamados
@@ -70,12 +75,19 @@ export class TicketController { // contém as rotas relacionadas a chamados
   };
 
   public list = async (
-    _request: Request,
+    request: Request<Record<string, never>, unknown, unknown, ListTicketsQuery>, // <params, response body, request body, query>
     response: Response,
     next: NextFunction,
   ): Promise<void> => {
     try {
-      const tickets = await this.ticketService.list();
+
+      const { status, priority, createdAtOrder } = request.query; // extrai os filtros da query string GET /tickets?status=OPEN&priority=HIGH&createdAtOrder=DESC
+
+      const tickets = await this.ticketService.list({
+        status, // enviando propriedades string | undefined para service
+        priority,
+        createdAtOrder,
+      });
 
       response.status(200).json(tickets);
     } catch (error) {

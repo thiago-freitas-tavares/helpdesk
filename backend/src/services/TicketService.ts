@@ -45,6 +45,14 @@ interface DeleteTicketRequest {
   authenticatedUserId: number;
 }
 
+type CreatedAtOrder = 'ASC' | 'DESC';
+
+interface ListTicketsRequest { // interface dos filtros que o service vai receber do request do controller
+  status?: string | undefined; // vem da query string da URL - GET /tickets?status=OPEN -> status=OPEN
+  priority?: string | undefined; // vem da query string da URL
+  createdAtOrder?: string | undefined; // vem da query string da URL
+}
+
 export class TicketService {
   private readonly ticketRepository: TicketRepository;
   private readonly userRepository: UserRepository;
@@ -104,8 +112,45 @@ export class TicketService {
     return this.toTicketResponse(ticket);
   }
 
-  public async list(): Promise<TicketResponse[]> { // não recebe parâmetro e retorna um array no formato de resposta da API TicketResponse
-    const tickets = await this.ticketRepository.findAll();
+  public async list({ status, priority, createdAtOrder }: ListTicketsRequest = {}): Promise<TicketResponse[]> { // o '= {}' permite chamar o método sem passar nada ou passando filtros
+    let validatedStatus: TicketStatus | undefined; // padrão é undefined
+    let validatedPriority: TicketPriority | undefined;
+    let validatedCreatedAtOrder: CreatedAtOrder = 'DESC'; // padrão será DESC (mais novos primeiro)
+
+    if (status !== undefined) { // status chega no formato de string, falamos para o TypeScript tratar status 'as TicketStatus' (ele não transforma o valor em tempo de execução)
+      if (!Object.values(TicketStatus).includes(status as TicketStatus)) {
+        throw new AppError('Status inválido', 400);
+      }
+
+      validatedStatus = status as TicketStatus; // validatedStatus não aceita string, apenas TicketStatus ou undefined
+    }
+
+    if (priority !== undefined) {
+      if (!Object.values(TicketPriority).includes(priority as TicketPriority)) {
+        throw new AppError('Prioridade inválida', 400);
+      }
+
+      validatedPriority = priority as TicketPriority;
+    }
+
+    if (createdAtOrder !== undefined) {
+      const normalizedCreatedAtOrder = createdAtOrder.toUpperCase();
+
+      if (
+        normalizedCreatedAtOrder !== 'ASC' &&
+        normalizedCreatedAtOrder !== 'DESC'
+      ) {
+        throw new AppError('Ordenação por data de criação inválida', 400);
+      }
+
+      validatedCreatedAtOrder = normalizedCreatedAtOrder;
+    }
+    
+    const tickets = await this.ticketRepository.findAll({
+      status: validatedStatus,
+      priority: validatedPriority,
+      createdAtOrder: validatedCreatedAtOrder,
+    });
 
     return tickets.map((ticket) => this.toTicketResponse(ticket)); // percorre cada ticket da lista tickets e converte o formato (basicamente, tira o createdAt e updratedAt do requester e assignee)
   }
