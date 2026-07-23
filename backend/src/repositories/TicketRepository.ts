@@ -45,4 +45,8 @@ export class TicketRepository {
       },
     });
   }
+
+  public async remove(ticket: Ticket): Promise<void> {
+    await this.repository.remove(ticket);
+  }
 }

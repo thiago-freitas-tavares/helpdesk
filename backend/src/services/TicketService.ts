@@ -40,6 +40,11 @@ interface UpdateTicketRequest { // interface com o formato dos dados que o servi
   priority?: TicketPriority | undefined;
 }
 
+interface DeleteTicketRequest {
+  id: number;
+  authenticatedUserId: number;
+}
+
 export class TicketService {
   private readonly ticketRepository: TicketRepository;
   private readonly userRepository: UserRepository;
@@ -163,6 +168,24 @@ export class TicketService {
     const updatedTicket = await this.ticketRepository.save(ticket); // atualiza o objeto ticket no banco, uma vez que já tem id
 
     return this.toTicketResponse(updatedTicket);
+  }
+
+  public async delete({ id, authenticatedUserId}: DeleteTicketRequest): Promise<void> {
+    if (!Number.isInteger(id) || id <= 0) {
+      throw new AppError('Chamado inválido', 400);
+    }
+
+    const ticket = await this.ticketRepository.findById(id);
+
+    if (!ticket) {
+      throw new AppError('Chamado não encontrado', 404);
+    }
+
+    if (ticket.requester.id !== authenticatedUserId) {
+      throw new AppError('Você não tem permissão para excluir este chamado', 403);
+    }
+
+    await this.ticketRepository.remove(ticket);
   }
 
   private toTicketResponse(ticket: { //recebe um objeto ticket e transforma ele no formato TicketResponse

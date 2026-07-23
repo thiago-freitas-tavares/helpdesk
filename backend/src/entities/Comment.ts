@@ -8,7 +8,8 @@ export class Comment {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @ManyToOne(() => Ticket, {nullable: false, onDelete: 'CASCADE'})
+  // onDelete CASCADE significa que quando um ticket for excluído, os comentários vinculados a ele também devem ser excluídos
+  @ManyToOne(() => Ticket, {nullable: false, onDelete: 'CASCADE'}) // se onDelete não tivesse sido colocado antes da migration, ela teria que ser feita novamente
   @JoinColumn({ name: 'ticket_id' })
   ticket!: Ticket;
 

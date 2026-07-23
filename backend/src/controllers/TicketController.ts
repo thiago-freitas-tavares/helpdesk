@@ -5,7 +5,7 @@ import { TicketPriority } from "../enums/TicketPriority";
 import { TicketStatus } from "../enums/TicketStatus";
 import { authMiddleware } from "../middlewares/authMiddleware";
 
-interface FindTicketParams {
+interface TicketIdParams { // FindTicketParams, UpdateTicketParams e DeleteTicketParams possuem exatamente a mesma estrutura, por isso, criamos uma mais genérica para usar em todas
   id?: string | undefined; // GET /tickets/1 chega como request.params.id = '1'
 }
 
@@ -13,10 +13,6 @@ interface CreateTicketBody { // body esperado da requisição POST /tickets.
   title?: string | undefined;
   description?: string | undefined;
   priority?: TicketPriority | undefined; 
-}
-
-interface UpdateTicketParams { // vem da URL
-  id?: string | undefined;
 }
 
 interface UpdateTicketBody {
@@ -58,7 +54,7 @@ export class TicketController { // contém as rotas relacionadas a chamados
   };
 
   public findById = async (
-    request: Request<FindTicketParams>,
+    request: Request<TicketIdParams>,
     response: Response,
     next: NextFunction,
   ): Promise<void> => {
@@ -88,7 +84,7 @@ export class TicketController { // contém as rotas relacionadas a chamados
   };
 
   public update = async (
-    request: Request<UpdateTicketParams, unknown, UpdateTicketBody>, // id = parâmetro - title, description, status, priority = body
+    request: Request<TicketIdParams, unknown, UpdateTicketBody>, // id = parâmetro - title, description, status, priority = body
     response: Response,
     next: NextFunction,
   ): Promise<void> => {
@@ -113,5 +109,28 @@ export class TicketController { // contém as rotas relacionadas a chamados
     } catch (error) {
       next(error);
     }
-  }
+  };
+
+  public delete = async (
+    request: Request<TicketIdParams>,
+    response: Response,
+    next: NextFunction,
+  ): Promise<void> => {
+    try {
+      if (!request.user) {
+        throw new AppError('Usuário não autenticado', 401);
+      }
+
+      const { id } = request.params;
+
+      const ticket = await this.ticketService.delete({
+        id: Number(id),
+        authenticatedUserId: request.user.id,
+      });
+
+      response.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  };
 }
