@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "nodenext",
+    "target": "ES2021",
+    "module": "es2022",
     "strict": true,
     "jsx": "preserve",
     "moduleResolution": "node",
@@ -12,13 +12,13 @@
     "forceConsistentCasingInFileNames": true,
     "useDefineForClassFields": true,
     "sourceMap": true,
-    // "baseUrl": ".",
+    "baseUrl": ".",
     "types": [
       "webpack-env"
     ],
     "paths": {
       "@/*": [
-        "./src/*"
+        "src/*"
       ]
     },
     "lib": [
