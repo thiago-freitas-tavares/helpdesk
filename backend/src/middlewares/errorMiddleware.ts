@@ -12,11 +12,11 @@ export function errorMiddleware(
     return response.status(error.statusCode).json({
       message: error.message,
     }); // se o errorMiddleware responde a request, não preciso dar next
-  }
+  };
 
   console.error(error);
 
   return response.status(500).json({ // 500 - Internal Server Error
     message: 'Erro interno',
   });
-}
+};

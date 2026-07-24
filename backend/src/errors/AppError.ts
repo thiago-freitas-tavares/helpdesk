@@ -5,5 +5,5 @@ export class AppError extends Error { // Error é uma classe nativa do JavaScrip
   constructor(message: string, statusCode = 400) { // este 400 representa o statusCode padrão, caso nenhum seja informado
     super(message); // chama o construtor da classe Error e entrega a mensagem para ela
     this.statusCode = statusCode;
-  }
-}
+  };
+};

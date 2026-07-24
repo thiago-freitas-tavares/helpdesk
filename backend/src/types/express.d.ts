@@ -9,8 +9,8 @@ declare global { // tipagem global no projeto
         id: number; // vem do token JWT, da claim sub
         role: UserRole;
       };
-    }
-  }
-}
+    };
+  };
+};
 
 export {}; // faz o TypeScript tratar esse arquivo como módulo

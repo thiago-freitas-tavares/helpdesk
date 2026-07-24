@@ -10,12 +10,12 @@ interface RegisterUserRequest { // tipagem dos dados que o cadastro recebe
   name?: string | undefined;
   email?: string | undefined;
   password?: string | undefined;
-}
+};
 
 interface LoginUserRequest {
   email?: string | undefined;
   password?: string | undefined;
-}
+};
 
 interface UserResponse { // tipagem dos dados que o cadastro/login devolve (retiramos a senha)
   id: number;
@@ -24,19 +24,19 @@ interface UserResponse { // tipagem dos dados que o cadastro/login devolve (reti
   role: UserRole; // por enquanto todos vem com a role padrão CUSTOMER. As demais serão configuradas por rota protegida.
   createdAt: Date;
   updatedAt: Date;
-}
+};
 
 interface LoginUserResponse {
   user: UserResponse;
   token: string;
-}
+};
 
 export class AuthService { // responsável pelas regras de autenticação e cadastro
   
   constructor(
     // cria propriedade do tipo UserRepository e depois cria a instância direto no construtor (parameter property), não acessa o TypeORM diretamente
-    private readonly userRepository: UserRepository = new UserRepository()
-  ) {}
+    private readonly userRepository: UserRepository = new UserRepository(),
+  ) {};
 
   public async register({ name, email, password }: RegisterUserRequest): Promise<UserResponse> { // método com desestruturação de dados recebidos aos invés de receber data: RegisterUserRequest
     const trimmedName = name?.trim(); // ? só executa o trim se name existir, se name = undefined, trimmedName = undefined
@@ -45,29 +45,29 @@ export class AuthService { // responsável pelas regras de autenticação e cada
     // não preciso colocar try/catch, pois o controller que chama este service já está dentro de um try/catch, os erros são enviados automaticamente para serem tratados lá
     if (!trimmedName) {
       throw new AppError('Nome é obrigatório', 400); // 400 - Bad Request
-    }
+    };
 
     if (!normalizedEmail) {
       throw new AppError('E-mail é obrigatório', 400);
-    }
+    };
 
     if (!this.isEmailValid(normalizedEmail)) { // this indica que estamos usando um método da própria classe AuthService.
       throw new AppError('Formato de e-mail inválido', 400);
-    }
+    };
 
     if (!password || password.trim().length === 0) { // senha não existe ou contém apenas espaços
       throw new AppError('Senha é obrigatória', 400);
-    }
+    };
 
     if (password.length < 6) {
       throw new AppError('A senha deve conter no mínimo 6 caracteres', 400);
-    }
+    };
 
     const userAlreadyExists = await this.userRepository.findByEmail(normalizedEmail);
 
     if (userAlreadyExists) {
       throw new AppError('E-mail já cadastrado', 409); // 409 - Conflict
-    }
+    };
 
     const hashedPassword = await hash(password, 10); // o segundo argumento é o salt rounds, que é o custo de processamento do hash
 
@@ -87,29 +87,29 @@ export class AuthService { // responsável pelas regras de autenticação e cada
 
     if (!normalizedEmail) {
       throw new AppError('E-mail é obrigatório', 400);
-    }
+    };
 
     if (!password || password.trim().length === 0) {
       throw new AppError('Senha é obrigatória', 400);
-    }
+    };
 
     const user = await this.userRepository.findByEmailWithPassword(normalizedEmail);
 
     if (!user) {
       throw new AppError('E-mail ou senha inválidos', 401); // 401 - Unauthorized
-    }
+    };
 
     const passwordMatches = await compare(password, user.password); // retorna true ou false
 
     if (!passwordMatches) {
       throw new AppError('E-mail ou senha inválidos', 401);
-    }
+    };
 
     const jwtSecret = process.env.JWT_SECRET;
 
     if (!jwtSecret) {
       throw new AppError('Configuração de autenticação inválida', 500);
-    }
+    };
 
     // se existir JWT_EXPIRES_IN no .env, pega ele, senão usa 1d / SignOptions serve para o TypeScript conferir se estão sendo passados opções válidas para o JWT
     const expiresIn = (process.env.JWT_EXPIRES_IN ?? '1d') as NonNullable<SignOptions['expiresIn']>; // NonNullable, pois o TypeScript estava reclamando que SignOptions['expiresIn'] pode incluir undefined
@@ -131,13 +131,13 @@ export class AuthService { // responsável pelas regras de autenticação e cada
       user: this.toUserResponse(user), // toUserResponse monta o objeto sem senha
       token, // será salvo pelo frontend no localStorage
     };
-  }
+  };
 
   private isEmailValid(email: string): boolean {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     return emailRegex.test(email);
-  }
+  };
 
   private toUserResponse(user: { // para evitar repetição, será usado pelo register e login
     id: number;
@@ -155,5 +155,5 @@ export class AuthService { // responsável pelas regras de autenticação e cada
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
-  }
-}
+  };
+};

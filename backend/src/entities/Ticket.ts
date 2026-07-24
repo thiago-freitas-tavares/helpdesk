@@ -35,4 +35,4 @@ export class Ticket {
 
   @UpdateDateColumn({ name:'updated_at' })
   updatedAt!: Date;
-}
+};

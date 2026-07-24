@@ -10,15 +10,15 @@ export class CommentRepository { // operações de banco relacionadas a comentá
 
   constructor() {
     this.repository = AppDataSource.getRepository(Comment); // a partir disso, conseguimos usar métodos como create, save, find, findOne, delete
-  }
+  };
 
   public create(data: CreateCommentData): Comment {
     return this.repository.create(data);
-  }
+  };
 
   public async save(comment: Comment): Promise<Comment> {
     return this.repository.save(comment); // TypeORM executa o INSERT na tabela comments e retorna o comentário salvo, já com id, createdAt e updatedAt
-  }
+  };
 
   public async findByTicketId(ticketId: number): Promise<Comment[]> { // recebe id do ticket como parâmetro e retorna um array da entidade do banco Comment
     return this.repository.find({
@@ -35,7 +35,7 @@ export class CommentRepository { // operações de banco relacionadas a comentá
         createdAt: 'ASC',
       },
     });
-  }
+  };
 
   public async findById(id: number): Promise<Comment | null> { // busca pelo id do comentário
     return this.repository.findOne({
@@ -47,9 +47,9 @@ export class CommentRepository { // operações de banco relacionadas a comentá
         author: true, // esse é o id do author - no service vamos validar se o usuário logado é o autor do comentário
       },
     });
-  }
+  };
 
   public async remove(comment: Comment): Promise<void> {
     await this.repository.remove(comment);
-  }
-}
+  };
+};

@@ -6,19 +6,19 @@ interface RegisterUserBody {
   name?: string | undefined;
   email?: string | undefined;
   password?: string | undefined;
-}
+};
 
 interface LoginUserBody {
   email?: string | undefined;
   password?: string | undefined;
-}
+};
 
 export class AuthController {
   private readonly authService: AuthService;
 
   constructor() {
     this.authService = new AuthService();
-  }
+  };
 
   public register = async ( // será chamado pela rota POST /auth/register - tem que ser arrow function, porque usa this
     // Record é um tipo utilitário do TypeScript usado para representar um objeto com chaves e valores tipados <chave, valor> e never = nenhum / o corpo da resposta já foi tipado no AuthService
@@ -38,7 +38,7 @@ export class AuthController {
       response.status(201).json(user); // 201 - Created
     } catch (error) {
       next(error); // função que envia o erro para o errorMiddleware
-    }
+    };
   };
 
   public login = async ( // será chamado pela rota POST /auth/login
@@ -57,8 +57,8 @@ export class AuthController {
       response.status(200).json(loginData); // 200 - OK (sucesso)
     } catch (error) {
       next(error);
-    }
-  }
+    };
+  };
 
   public me = async ( // será chamado pela rota GET /auth/me
     request: Request, // Request simples, pois não precisamos tipar body, params ou query para essa rota.
@@ -68,13 +68,13 @@ export class AuthController {
     try {
       if (!request.user) {
         throw new AppError('Usuário não autenticado', 401);
-      }
+      };
 
       response.status(200).json({
         user: request.user,
       });
     } catch (error) { // se request.user existe, significa que a autenticação do token no authMiddleware foi válida, por isso, não precisaria de catch(error) aqui, mas deixamos por padronização
       next(error);
-    }
+    };
   };
-}
+};

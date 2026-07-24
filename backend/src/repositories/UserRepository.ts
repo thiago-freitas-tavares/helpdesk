@@ -9,30 +9,30 @@ interface CreateUserData { // interface para tipar os dados necessários para cr
   name: string;
   email: string;
   password: string;
-}
+};
 
 export class UserRepository { // operações do banco relacionadas a usuários
   private readonly repository: Repository<User>; // declaração e tipagem da propriedade repository
 
   constructor() {
     this.repository = AppDataSource.getRepository(User); // atribuição dos dados da entidade User na propriedade repository
-  }
+  };
 
   public create(data: CreateUserData): User { // create não é assíncrono
     return this.repository.create(data); // monta a entidade User com os dados recebidos (não salva no banco, apenas cria a instância)
-  }
+  };
 
   public async save(user: User): Promise<User> { // salvar no banco é assíncrono
     return this.repository.save(user); // TypeORM executa o INSERT na tabela users
-  }
+  };
   
   public async findByEmail(email: string): Promise<User | null> { // método que recebe email e retorna User ou null a partir de consulta assíncrona ao banco
     return this.repository.findOne({
       where: {
         email // buscando usuário cujo email é igual ao email recebido como parâmetro do método
-      }
+      },
     });
-  }
+  };
   
   public async findByEmailWithPassword(email: string): Promise<User | null> {
     return this.repository
@@ -40,7 +40,7 @@ export class UserRepository { // operações do banco relacionadas a usuários
     .addSelect('user.password') // incluir a coluna password, além das colunas normais (na entidade User colocamos select: false), para comparar no login
     .where('user.email = :email', { email })
     .getOne(); // executa a query e retorna um único registro ou null
-  }
+  };
   
   public async findById(id: number): Promise<User | null> { // será usado no TicketService para garantir que o usuário autenticado existe antes de criar um chamado
     return this.repository.findOne({
@@ -48,6 +48,5 @@ export class UserRepository { // operações do banco relacionadas a usuários
         id,
       },
     });
-  }
-
-}
+  };
+};
