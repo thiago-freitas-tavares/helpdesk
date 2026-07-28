@@ -1,0 +1,6 @@
+/* base do Tailwind, como reset e normalizações de estilo */
+@tailwind base;
+/* inclui a camada de componentes, que permite depois criar classes reutilizáveis usando @layer components */
+@tailwind components;
+/* inclui classes utilitárias do Tailwind, como: flex, items-center, justify-center, p-8, text-gray-600, bg-white, rounded-lg, shadow */
+@tailwind utilities;

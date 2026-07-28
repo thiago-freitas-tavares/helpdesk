@@ -1,0 +1,18 @@
+{
+  "css.lint.unknownAtRules": "ignore", // diz ao vscode - não marque como erro regras CSS desconhecidas
+  "scss.lint.unknownAtRules": "ignore",
+  "less.lint.unknownAtRules": "ignore",
+
+  "tailwindCSS.experimental.configFile": "./frontend/tailwind.config.js",
+  "tailwindCSS.includeLanguages": {
+    "vue": "html"
+  },
+  "editor.quickSuggestions": {
+    "strings": "on"
+  },
+  "tailwindCSS.hovers": true, // permite passar o mouse em cima de uma classe Tailwind e ver o CSS gerado.
+  "tailwindCSS.suggestions": true,
+  "tailwindCSS.validate": true,
+  "tailwindCSS.showPixelEquivalents": true, // mostra equivalentes em pixel.
+  "tailwindCSS.rootFontSize": 16
+}
