@@ -1,7 +1,7 @@
 import Vue from "vue"; // no Vue3 é createApp
 import App from "./App.vue"; // componente principal da aplicação
-import router from "./router"; // Vue Router
-import store from "./store"; // Vuex
+import router from "./router"; // Vue Router importado do /router/index.ts
+import store from "./store"; // Vuex importado do /store/index.ts
 
 // 'npm install -D tailwindcss@3 postcss autoprefixer' e depois 'npx tailwindcss init -p' cria os arquivos 'tailwind.config.js' e 'postcss.config.js'
 import "@/assets/styles/tailwind.css";

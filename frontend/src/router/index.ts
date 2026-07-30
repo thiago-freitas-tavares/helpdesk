@@ -1,29 +1,32 @@
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
-import HomeView from "../views/HomeView.vue";
+import LoginView from "../views/LoginView.vue";
+import RegisterView from "../views/RegisterView.vue";
 
-Vue.use(VueRouter);
+Vue.use(VueRouter); // instala o Vue Router dentro do Vue, permitindo o uso de recursos, como 'this.$router', 'this.$route', '<router-view />', '<router-link />'
 
+// RouteConfig ajuda o TypeScript a entender que cada item do array precisa seguir o formato esperado por uma rota do Vue Router
 const routes: Array<RouteConfig> = [
   {
     path: "/",
-    name: "home",
-    component: HomeView,
+    redirect: "/login",
   },
   {
-    path: "/about",
-    name: "about",
-    // route level code-splitting
-    // this generates a separate chunk (about.[hash].js) for this route
-    // which is lazy-loaded when the route is visited.
-    component: () =>
-      import(/* webpackChunkName: "about" */ "../views/AboutView.vue"),
+    path: "/login", // pode ser chamado através de 'this.$router.push("/login")'
+    name: "login", // pode ser chamado através de 'this.$router.push({ name: "login" })'
+    component: LoginView,
+  },
+  {
+    path: "/register",
+    name: "register",
+    component: RegisterView,
   },
 ];
 
+// cria a instância do Vue Router, que compara a URL atual com as rotas e define qual componente será renderizado no <router-view />
 const router = new VueRouter({
-  mode: "history",
-  base: process.env.BASE_URL,
+  mode: "history", // deixa as rotas mais limpas - sem history, poderiam ficar '/#/login'
+  base: process.env.BASE_URL, // variável disponibilizada na criação do projeto com Vue CLI - representa a base pública da aplicação, que geralmente é "/"
   routes,
 });
 
