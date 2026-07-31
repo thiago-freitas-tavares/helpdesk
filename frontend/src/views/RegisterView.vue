@@ -35,7 +35,7 @@
         <BaseInput
           id="password"
           label="Senha"
-          type="text"
+          type="password"
           placeholder="Digite sua senha"
           v-model="password"
         />
