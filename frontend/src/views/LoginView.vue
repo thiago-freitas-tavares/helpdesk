@@ -63,6 +63,7 @@ import { Component, Vue } from "vue-property-decorator";
 import BaseButton from "../components/BaseButton.vue";
 import BaseInput from "../components/BaseInput.vue";
 
+// este decorator diz: transforme a classe abaixo em componente Vue e registre BaseButton e BaseInput para uso no template
 @Component({
   components: {
     BaseButton,
