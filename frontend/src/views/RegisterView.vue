@@ -44,7 +44,10 @@
           A senha deve ter pelo menos 6 caracteres.
         </p>
 
-        <p v-if="errorMessage">
+        <p
+          v-if="errorMessage"
+          class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+        >
           {{ errorMessage }}
         </p>
 
@@ -134,6 +137,7 @@ export default class RegisterView extends Vue {
   }
 
   public goToLogin(): void {
+    // proteção para que o usuário não navegue para a tela de login enquanto o cadastro está em andamento, além do botão desabilitado
     if (this.isLoading) {
       return;
     }

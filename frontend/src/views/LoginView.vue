@@ -41,16 +41,40 @@
           v-model="password"
         />
 
+        <p
+          v-if="errorMessage"
+          class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+        >
+          {{ errorMessage }}
+        </p>
+
+        <p
+          v-if="successMessage"
+          class="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700"
+        >
+          {{ successMessage }}
+        </p>
+
         <!-- a prop fullWidth deve ser passada em kebab-case no Vue/HTML e usar v-bind para passar o valor como booleano real, senão passa como string -->
         <!-- este botão não precisa de @click, pois o @submit do form é quem escuta o envio e chama handleLogin-->
-        <BaseButton type="submit" :full-width="true"> Entrar </BaseButton>
+        <BaseButton
+          type="submit"
+          :full-width="true"
+          :disabled="!isFormValid || isLoading"
+        >
+          {{ submitButtonText }}
+        </BaseButton>
       </form>
 
       <div class="mt-6 border-t border-slate-200 pt-6 text-center">
         <p class="text-sm text-slate-600">Ainda não tem uma conta?</p>
 
         <!-- variant não precisa de v-bind, pois passa string fixa, e o @click escuta o $emit('click') do BaseButton para chamar goToRegister -->
-        <BaseButton variant="secondary" @click="goToRegister">
+        <BaseButton
+          variant="secondary"
+          :disabled="isLoading"
+          @click="goToRegister"
+        >
           Criar conta
         </BaseButton>
       </div>
@@ -59,9 +83,11 @@
 </template>
 
 <script lang="ts">
+import axios from "axios";
 import { Component, Vue } from "vue-property-decorator";
 import BaseButton from "../components/BaseButton.vue";
 import BaseInput from "../components/BaseInput.vue";
+import { authService } from "@/services/authService";
 
 // este decorator diz: transforme a classe abaixo em componente Vue e registre BaseButton e BaseInput para uso no template
 @Component({
@@ -74,17 +100,62 @@ export default class LoginView extends Vue {
   // propriedades equivalentes ao data() da Options API - guardam os valores reativos dos inputs
   public email = "";
   public password = "";
+  public errorMessage = "";
+  public successMessage = "";
+  public isLoading = false;
 
-  public handleLogin(): void {
-    // imprime no console no formato de objeto - depois vamos chamar o backend com Axios
-    console.log("Login", {
-      email: this.email, // sem this, o método não encontra a propriedade, pois ela não foi criada dentro do método, com this, o método consegue acessar propriedades da classe
-      password: this.password,
-    });
+  get isFormValid(): boolean {
+    return this.email.trim() !== "" && this.password.length >= 6;
+  }
+
+  get submitButtonText(): string {
+    return this.isLoading ? "Entrando..." : "Entrar";
+  }
+
+  public async handleLogin(): Promise<void> {
+    if (!this.isFormValid || this.isLoading) {
+      return;
+    }
+
+    this.isLoading = true;
+    this.errorMessage = "";
+    this.successMessage = "";
+
+    try {
+      // chama o backend com os dados digitados no formato LoginRequest e salva o objeto recebido como resposta na variável response
+      const response = await authService.login({
+        email: this.email, // sem this, o método não encontra a propriedade, pois ela não foi criada dentro do método, com this, o método consegue acessar propriedades da classe
+        password: this.password,
+      });
+
+      // salva o token JWT no localStorage do navegador, que continua existindo mesmo se o usuário fechar e abrir o navegador de novo (chave, valor)
+      localStorage.setItem("token", response.token); // depois, quando o frontend precisar chamar uma rota protegida, ele poderá pegar esse token e mandar no header
+      // salva os dados do usuário no localStorage, mas localStorage só salva texto e response.user é um objeto, por isso o stringify
+      localStorage.setItem("user", JSON.stringify(response.user)); // depois para recuperar os dados seria const user = JSON.parse(localStorage.getItem("user") || "null");
+
+      this.successMessage = "Login realizado com sucesso."; // por enquanto só exibimos a mensagem de sucesso, depois redirecionaremos para a tela de chamados
+    } catch (error) {
+      this.errorMessage = this.getErrorMessage(error);
+    } finally {
+      this.isLoading = false;
+    }
   }
 
   public goToRegister(): void {
+    if (this.isLoading) {
+      return;
+    }
     this.$router.push("/register");
+  }
+
+  private getErrorMessage(error: unknown): string {
+    if (axios.isAxiosError(error)) {
+      const message = error.response?.data?.message;
+      if (typeof message == "string") {
+        return message;
+      }
+    }
+    return "Não foi possível criar a conta. Tente novamente.";
   }
 }
 </script>
