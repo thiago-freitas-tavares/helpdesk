@@ -7,7 +7,7 @@ import {
 } from "../types/auth";
 
 // objeto AuthService concentra as funções relacionadas à autenticação
-export const AuthService = {
+export const authService = {
   async register(payload: RegisterRequest): Promise<UserResponse> {
     const response = await api.post<UserResponse>("/auth/register", payload); // requisição POST para auth/register com payload (enviado ao backend) no corpo da requisição
 
