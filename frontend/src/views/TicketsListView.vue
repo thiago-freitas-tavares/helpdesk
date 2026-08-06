@@ -33,7 +33,13 @@
             </p>
           </div>
 
-          <BaseButton @click="loadTickets"> Atualizar </BaseButton>
+          <div class="flex gap-3">
+            <BaseButton variant="secondary" @click="loadTickets">
+              Atualizar
+            </BaseButton>
+
+            <BaseButton @click="goToCreateTicket"> Novo chamado </BaseButton>
+          </div>
         </div>
 
         <p
@@ -160,6 +166,10 @@ export default class TicketsListView extends Vue {
     await this.$store.dispatch("auth/logout"); // dispatch chama a action logout store/modules/auth.ts que limpa o localStorage e o state do Vuex
 
     this.$router.push("/login"); // redireciona para a tela de login
+  }
+
+  public goToCreateTicket(): void {
+    this.$router.push({ name: "ticket-create" });
   }
 
   public getStatusLabel(status: TicketStatus): string {

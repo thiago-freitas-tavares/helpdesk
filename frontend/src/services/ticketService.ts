@@ -1,5 +1,9 @@
 import { api } from "./api"; // como já configuramos o interceptor, essa instância manda o token automaticamente.
-import { ListTicketsParams, TicketResponse } from "../types/ticket";
+import {
+  CreateTicketRequest,
+  ListTicketsParams,
+  TicketResponse,
+} from "../types/ticket";
 
 // serviço responsável por chamadas de API relacionadas a tickets.
 export const ticketService = {
@@ -11,5 +15,11 @@ export const ticketService = {
     });
 
     return response.data; // retorna apenas o corpo, que é um array de chamados
+  },
+
+  async create(payload: CreateTicketRequest): Promise<TicketResponse> {
+    const response = await api.post<TicketResponse>("/tickets", payload);
+
+    return response.data;
   },
 };

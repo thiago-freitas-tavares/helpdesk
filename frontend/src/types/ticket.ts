@@ -30,3 +30,9 @@ export interface ListTicketsParams {
   priority?: TicketPriority;
   createdAtOrder?: "ASC" | "DESC";
 }
+
+export interface CreateTicketRequest {
+  title: string;
+  description: string;
+  priority?: TicketPriority;
+}
