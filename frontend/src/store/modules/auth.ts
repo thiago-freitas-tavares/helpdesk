@@ -4,14 +4,17 @@ import type {
   Module,
   MutationTree,
 } from "vuex/types/index";
+
+import {
+  TOKEN_STORAGE_KEY,
+  USER_STORAGE_KEY,
+} from "../../constants/storageKeys";
+
 import { LoginRequest, LoginResponse, UserResponse } from "../../types/auth";
 import { authService } from "../../services/authService"; // Vuex não vai chamar o Axios diretamente, vai chamar o authService
 import { AuthState, RootState } from "../types";
 
 // este arquivo serve para centralizar a autenticação no Vuex
-
-const TOKEN_STORAGE_KEY = "token"; // apenas nomeando a constante TOKEN_STORAGE_KEY com a string token, que é a chave usada no localStorage
-const USER_STORAGE_KEY = "user";
 
 function getStoredUser(): UserResponse | null {
   // localStorage é uma API global do navegador e como o frontend roda no navegador, qualquer arquivo do frontend pode acessar localStorage.getItem .setItem .removeItem

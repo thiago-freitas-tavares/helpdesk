@@ -48,13 +48,6 @@
           {{ errorMessage }}
         </p>
 
-        <p
-          v-if="successMessage"
-          class="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700"
-        >
-          {{ successMessage }}
-        </p>
-
         <!-- a prop fullWidth deve ser passada em kebab-case no Vue/HTML e usar v-bind para passar o valor como booleano real, senão passa como string -->
         <!-- este botão não precisa de @click, pois o @submit do form é quem escuta o envio e chama handleLogin-->
         <BaseButton
@@ -124,12 +117,13 @@ export default class LoginView extends Vue {
       // $store vem da main, pode ser acessado globalmente, guarda estados globais da aplicação, como auth.token e auth.user, e permite chamar actions, mutations e getters
       // dispatch é o método usado para chamar action no Vuex, neste caso "auth/login" é módulo auth / action login e o objeto email/password é o payload
       // este auth que chama a action login vem do nome usado ao registrar o módulo no store/index.ts (auth: authModule)
+      // dispatch("auth/login") = faz login, chama backend, busca dados/token
       await this.$store.dispatch("auth/login", {
         email: this.email,
         password: this.password,
       });
 
-      this.successMessage = "Login realizado com sucesso.";
+      this.$router.push("/tickets"); // router.push("/tickets") = muda a tela no frontend
     } catch (error) {
       this.errorMessage = this.getErrorMessage(error);
     } finally {
