@@ -87,7 +87,6 @@ import axios from "axios";
 import { Component, Vue } from "vue-property-decorator";
 import BaseButton from "../components/BaseButton.vue";
 import BaseInput from "../components/BaseInput.vue";
-import { authService } from "@/services/authService";
 
 // este decorator diz: transforme a classe abaixo em componente Vue e registre BaseButton e BaseInput para uso no template
 @Component({
@@ -122,18 +121,15 @@ export default class LoginView extends Vue {
     this.successMessage = "";
 
     try {
-      // chama o backend com os dados digitados no formato LoginRequest e salva o objeto recebido como resposta na variável response
-      const response = await authService.login({
-        email: this.email, // sem this, o método não encontra a propriedade, pois ela não foi criada dentro do método, com this, o método consegue acessar propriedades da classe
+      // $store vem da main, pode ser acessado globalmente, guarda estados globais da aplicação, como auth.token e auth.user, e permite chamar actions, mutations e getters
+      // dispatch é o método usado para chamar action no Vuex, neste caso "auth/login" é módulo auth / action login e o objeto email/password é o payload
+      // este auth que chama a action login vem do nome usado ao registrar o módulo no store/index.ts (auth: authModule)
+      await this.$store.dispatch("auth/login", {
+        email: this.email,
         password: this.password,
       });
 
-      // salva o token JWT no localStorage do navegador, que continua existindo mesmo se o usuário fechar e abrir o navegador de novo (chave, valor)
-      localStorage.setItem("token", response.token); // depois, quando o frontend precisar chamar uma rota protegida, ele poderá pegar esse token e mandar no header
-      // salva os dados do usuário no localStorage, mas localStorage só salva texto e response.user é um objeto, por isso o stringify
-      localStorage.setItem("user", JSON.stringify(response.user)); // depois para recuperar os dados seria const user = JSON.parse(localStorage.getItem("user") || "null");
-
-      this.successMessage = "Login realizado com sucesso."; // por enquanto só exibimos a mensagem de sucesso, depois redirecionaremos para a tela de chamados
+      this.successMessage = "Login realizado com sucesso.";
     } catch (error) {
       this.errorMessage = this.getErrorMessage(error);
     } finally {

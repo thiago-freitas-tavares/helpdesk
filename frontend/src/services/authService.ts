@@ -11,14 +11,14 @@ export const authService = {
   async register(payload: RegisterRequest): Promise<UserResponse> {
     const response = await api.post<UserResponse>("/auth/register", payload); // requisição POST para auth/register com payload (enviado ao backend) no corpo da requisição
 
-    // Axios retorna um objeto grande, com status, headers, config e data - queremos data (recebido do backend)
-    return response.data;
+    // Axios retorna um objeto grande, com data, status, statusText, headers, config, request - queremos data (recebido do backend)
+    return response.data; // response.data.id .name .email .role .createdAt .updatedAt
   },
 
   async login(payload: LoginRequest): Promise<LoginResponse> {
     const response = await api.post<LoginResponse>("/auth/login", payload);
 
-    return response.data;
+    return response.data; // response.data.user .token
   },
 
   // o frontend precisa saber se um token que ele possui ainda é válido, seja para acesso após o login ou de rotas protegidas
