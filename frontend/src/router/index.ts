@@ -4,6 +4,7 @@ import LoginView from "../views/LoginView.vue";
 import RegisterView from "../views/RegisterView.vue";
 import TicketsListView from "../views/TicketsListView.vue";
 import TicketCreateView from "../views/TicketCreateView.vue";
+import TicketDetailView from "../views/TicketDetailView.vue";
 // este store é a store global do Vuex e permite usar store.state, store.getters, store.dispatch, store.commit
 import store from "../store"; // quando se importa a pasta sem especificar o arquivo, o TypeScript/Webpack procura automaticamente o arquivo index.ts dentro dela
 
@@ -43,6 +44,14 @@ const routes: Array<RouteConfig> = [
     path: "/tickets/new",
     name: "ticket-create",
     component: TicketCreateView,
+    meta: {
+      requiresAuth: true,
+    },
+  },
+  {
+    path: "/tickets/:id",
+    name: "ticket-detail",
+    component: TicketDetailView,
     meta: {
       requiresAuth: true,
     },

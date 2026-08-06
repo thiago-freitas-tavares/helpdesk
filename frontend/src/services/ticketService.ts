@@ -17,6 +17,12 @@ export const ticketService = {
     return response.data; // retorna apenas o corpo, que é um array de chamados
   },
 
+  async findById(id: number): Promise<TicketResponse> {
+    const response = await api.get<TicketResponse>(`/tickets/${id}`);
+
+    return response.data;
+  },
+
   async create(payload: CreateTicketRequest): Promise<TicketResponse> {
     const response = await api.post<TicketResponse>("/tickets", payload);
 

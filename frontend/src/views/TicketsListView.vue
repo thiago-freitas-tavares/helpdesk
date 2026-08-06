@@ -99,9 +99,18 @@
               {{ ticket.description }}
             </p>
 
-            <p class="mt-4 text-xs text-slate-500">
-              Criado em {{ formatDate(ticket.createdAt) }}
-            </p>
+            <div class="mt-4 flex items-center justify-between">
+              <p class="text-xs text-slate-500">
+                Criado em {{ formatDate(ticket.createdAt) }}
+              </p>
+
+              <BaseButton
+                variant="secondary"
+                @click="goToTicketDetail(ticket.id)"
+              >
+                Abrir
+              </BaseButton>
+            </div>
           </article>
         </div>
       </section>
@@ -170,6 +179,15 @@ export default class TicketsListView extends Vue {
 
   public goToCreateTicket(): void {
     this.$router.push({ name: "ticket-create" });
+  }
+
+  public goToTicketDetail(ticketId: number): void {
+    void this.$router.push({
+      name: "ticket-detail",
+      params: {
+        id: String(ticketId),
+      },
+    });
   }
 
   public getStatusLabel(status: TicketStatus): string {
