@@ -3,6 +3,7 @@ import {
   CreateTicketRequest,
   ListTicketsParams,
   TicketResponse,
+  UpdateTicketRequest,
 } from "../types/ticket";
 
 // serviço responsável por chamadas de API relacionadas a tickets.
@@ -25,6 +26,15 @@ export const ticketService = {
 
   async create(payload: CreateTicketRequest): Promise<TicketResponse> {
     const response = await api.post<TicketResponse>("/tickets", payload);
+
+    return response.data;
+  },
+
+  async update(
+    id: number,
+    payload: UpdateTicketRequest
+  ): Promise<TicketResponse> {
+    const response = await api.patch<TicketResponse>(`/tickets/${id}`, payload);
 
     return response.data;
   },

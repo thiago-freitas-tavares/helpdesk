@@ -36,3 +36,10 @@ export interface CreateTicketRequest {
   description: string;
   priority?: TicketPriority;
 }
+
+export interface UpdateTicketRequest {
+  title: string;
+  description: string;
+  status: TicketStatus;
+  priority: TicketPriority;
+}

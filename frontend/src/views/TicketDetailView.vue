@@ -16,7 +16,13 @@
           </p>
         </div>
 
-        <BaseButton variant="secondary" @click="goBack"> Voltar </BaseButton>
+        <div class="flex gap-3">
+          <BaseButton v-if="canEditTicket" @click="goToEdit">
+            Editar
+          </BaseButton>
+
+          <BaseButton variant="secondary" @click="goBack"> Voltar </BaseButton>
+        </div>
       </header>
 
       <section class="rounded-2xl bg-white p-8 shadow">
@@ -104,6 +110,7 @@ import { Component, Vue } from "vue-property-decorator";
 import BaseButton from "../components/BaseButton.vue";
 import { ticketService } from "../services/ticketService";
 import { TicketPriority, TicketResponse, TicketStatus } from "../types/ticket";
+import { UserResponse } from "../types/auth";
 
 @Component({
   components: {
@@ -127,6 +134,18 @@ export default class TicketDetailView extends Vue {
 
   get assigneeName(): string {
     return this.ticket?.assignee?.name || "Sem responsável";
+  }
+
+  get currentUser(): UserResponse | null {
+    return this.$store.getters["auth/currentUser"];
+  }
+
+  get canEditTicket(): boolean {
+    return (
+      this.ticket !== null &&
+      this.currentUser !== null &&
+      this.ticket.requester.id === this.currentUser.id
+    );
   }
 
   public mounted(): void {
@@ -154,6 +173,19 @@ export default class TicketDetailView extends Vue {
     } finally {
       this.isLoading = false;
     }
+  }
+
+  public goToEdit(): void {
+    if (!this.ticket) {
+      return;
+    }
+
+    void this.$router.push({
+      name: "ticket-edit",
+      params: {
+        id: String(this.ticket.id),
+      },
+    });
   }
 
   public goBack(): void {
