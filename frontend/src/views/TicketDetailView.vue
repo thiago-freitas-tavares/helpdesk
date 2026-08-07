@@ -86,6 +86,13 @@
             </div>
           </div>
 
+          <p
+            v-if="deleteErrorMessage"
+            class="mb-6 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+          >
+            {{ deleteErrorMessage }}
+          </p>
+
           <div class="mb-6">
             <h3 class="mb-2 text-sm font-semibold text-slate-900">Descrição</h3>
 
@@ -93,13 +100,6 @@
               {{ ticket.description }}
             </p>
           </div>
-
-          <p
-            v-if="deleteErrorMessage"
-            class="mb-6 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
-          >
-            {{ deleteErrorMessage }}
-          </p>
 
           <div
             class="grid gap-4 border-t border-slate-200 pt-6 text-sm text-slate-600 md:grid-cols-2"
@@ -126,6 +126,94 @@
           </div>
         </article>
       </section>
+
+      <section class="mt-6 rounded-2xl bg-white p-8 shadow">
+        <div class="mb-6">
+          <h2 class="text-xl font-semibold text-slate-900">Comentários</h2>
+
+          <p class="mt-2 text-sm text-slate-600">
+            Acompanhe e registre comentários sobre este chamado.
+          </p>
+        </div>
+
+        <form class="mb-6 space-y-3" @submit.prevent="handleCreateComment">
+          <div>
+            <label
+              for="comment"
+              class="mb-1 block text-sm font-medium text-slate-700"
+            >
+              Novo comentário
+            </label>
+
+            <textarea
+              id="comment"
+              v-model="commentContent"
+              rows="4"
+              placeholder="Digite seu comentário"
+              class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
+            ></textarea>
+          </div>
+
+          <p
+            v-if="commentErrorMessage"
+            class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+          >
+            {{ commentErrorMessage }}
+          </p>
+
+          <div class="flex justify-end">
+            <BaseButton
+              type="submit"
+              :disabled="!isCommentFormValid || isCreatingComment"
+            >
+              {{ commentButtonText }}
+            </BaseButton>
+          </div>
+        </form>
+
+        <p
+          v-if="isLoadingComments"
+          class="rounded-lg bg-blue-50 px-3 py-2 text-sm text-blue-700"
+        >
+          Carregando comentários...
+        </p>
+
+        <p
+          v-else-if="commentsErrorMessage"
+          class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+        >
+          {{ commentsErrorMessage }}
+        </p>
+
+        <p
+          v-else-if="!hasComments"
+          class="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600"
+        >
+          Nenhum comentário encontrado.
+        </p>
+
+        <div v-else class="space-y-4">
+          <article
+            v-for="comment in comments"
+            :key="comment.id"
+            class="rounded-xl border border-slate-200 p-4"
+          >
+            <div class="mb-2 flex items-center justify-between gap-4">
+              <p class="text-sm font-semibold text-slate-900">
+                {{ comment.author.name }}
+              </p>
+
+              <p class="text-xs text-slate-500">
+                {{ formatDate(comment.createdAt) }}
+              </p>
+            </div>
+
+            <p class="whitespace-pre-line text-sm leading-6 text-slate-700">
+              {{ comment.content }}
+            </p>
+          </article>
+        </div>
+      </section>
     </section>
   </main>
 </template>
@@ -135,8 +223,10 @@ import axios from "axios";
 import { Component, Vue } from "vue-property-decorator";
 import BaseButton from "../components/BaseButton.vue";
 import { ticketService } from "../services/ticketService";
+import { commentService } from "../services/commentService";
 import { TicketPriority, TicketResponse, TicketStatus } from "../types/ticket";
 import { UserResponse } from "../types/auth";
+import { CommentResponse } from "../types/comment";
 
 @Component({
   components: {
@@ -145,9 +235,15 @@ import { UserResponse } from "../types/auth";
 })
 export default class TicketDetailView extends Vue {
   public ticket: TicketResponse | null = null;
+  public comments: CommentResponse[] = [];
+  public commentContent = "";
   public isLoading = false;
-  public errorMessage = "";
+  public isLoadingComments = false;
+  public isCreatingComment = false;
   public isDeleting = false;
+  public errorMessage = "";
+  public commentsErrorMessage = "";
+  public commentErrorMessage = "";
   public deleteErrorMessage = "";
 
   get ticketId(): number | null {
@@ -160,12 +256,12 @@ export default class TicketDetailView extends Vue {
     return id;
   }
 
-  get assigneeName(): string {
-    return this.ticket?.assignee?.name || "Sem responsável";
-  }
-
   get currentUser(): UserResponse | null {
     return this.$store.getters["auth/currentUser"];
+  }
+
+  get assigneeName(): string {
+    return this.ticket?.assignee?.name || "Sem responsável";
   }
 
   get canEditTicket(): boolean {
@@ -180,8 +276,21 @@ export default class TicketDetailView extends Vue {
     return this.isDeleting ? "Excluindo..." : "Excluir";
   }
 
+  get hasComments(): boolean {
+    return this.comments.length > 0;
+  }
+
+  get isCommentFormValid(): boolean {
+    return this.commentContent.trim() !== "";
+  }
+
+  get commentButtonText(): string {
+    return this.isCreatingComment ? "Comentando..." : "Comentar";
+  }
+
   public mounted(): void {
     this.loadTicket();
+    this.loadComments();
   }
 
   public async loadTicket(): Promise<void> {
@@ -207,17 +316,53 @@ export default class TicketDetailView extends Vue {
     }
   }
 
-  public goToEdit(): void {
-    if (!this.ticket) {
+  public async loadComments(): Promise<void> {
+    if (this.isLoadingComments) {
       return;
     }
 
-    void this.$router.push({
-      name: "ticket-edit",
-      params: {
-        id: String(this.ticket.id),
-      },
-    });
+    if (this.ticketId === null) {
+      this.commentsErrorMessage = "Chamado inválido.";
+
+      return;
+    }
+
+    this.isLoadingComments = true;
+    this.commentsErrorMessage = "";
+
+    try {
+      this.comments = await commentService.listByTicketId(this.ticketId);
+    } catch (error) {
+      this.commentsErrorMessage = this.getErrorMessage(error);
+    } finally {
+      this.isLoadingComments = false;
+    }
+  }
+
+  public async handleCreateComment(): Promise<void> {
+    if (
+      !this.isCommentFormValid ||
+      this.isCreatingComment ||
+      this.ticketId === null
+    ) {
+      return;
+    }
+
+    this.isCreatingComment = true;
+    this.commentErrorMessage = "";
+
+    try {
+      const createdComment = await commentService.create(this.ticketId, {
+        content: this.commentContent.trim(),
+      });
+
+      this.comments.push(createdComment);
+      this.commentContent = "";
+    } catch (error) {
+      this.commentErrorMessage = this.getErrorMessage(error);
+    } finally {
+      this.isCreatingComment = false;
+    }
   }
 
   public async handleDeleteTicket(): Promise<void> {
@@ -240,7 +385,7 @@ export default class TicketDetailView extends Vue {
     try {
       await ticketService.remove(this.ticket.id);
 
-      void this.$router.push({ name: "tickets" });
+      this.$router.push({ name: "tickets" });
     } catch (error) {
       this.deleteErrorMessage = this.getErrorMessage(error);
     } finally {
@@ -250,6 +395,19 @@ export default class TicketDetailView extends Vue {
 
   public goBack(): void {
     this.$router.push({ name: "tickets" });
+  }
+
+  public goToEdit(): void {
+    if (!this.ticket) {
+      return;
+    }
+
+    void this.$router.push({
+      name: "ticket-edit",
+      params: {
+        id: String(this.ticket.id),
+      },
+    });
   }
 
   public getStatusLabel(status: TicketStatus): string {
