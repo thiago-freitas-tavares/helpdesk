@@ -72,15 +72,11 @@
             </div>
 
             <div class="flex gap-2">
-              <span
-                class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700"
-              >
+              <span :class="getStatusBadgeClasses(ticket.status)">
                 {{ getStatusLabel(ticket.status) }}
               </span>
 
-              <span
-                class="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700"
-              >
+              <span :class="getPriorityBadgeClasses(ticket.priority)">
                 {{ getPriorityLabel(ticket.priority) }}
               </span>
             </div>
@@ -494,6 +490,32 @@ export default class TicketDetailView extends Vue {
     };
 
     return labels[priority];
+  }
+
+  public getStatusBadgeClasses(status: TicketStatus): string {
+    const baseClasses = "rounded-full border px-3 py-1 text-xs font-medium";
+
+    const statusClasses: Record<TicketStatus, string> = {
+      [TicketStatus.OPEN]: "border-blue-200 bg-blue-50 text-blue-700",
+      [TicketStatus.IN_PROGRESS]:
+        "border-violet-200 bg-violet-50 text-violet-700",
+      [TicketStatus.DONE]: "border-green-200 bg-green-50 text-green-700",
+      [TicketStatus.CANCELED]: "border-slate-200 bg-slate-100 text-slate-600",
+    };
+
+    return [baseClasses, statusClasses[status]].join(" ");
+  }
+
+  public getPriorityBadgeClasses(priority: TicketPriority): string {
+    const baseClasses = "rounded-full border px-3 py-1 text-xs font-medium";
+
+    const priorityClasses: Record<TicketPriority, string> = {
+      [TicketPriority.LOW]: "border-green-200 bg-green-50 text-green-700",
+      [TicketPriority.MEDIUM]: "border-amber-200 bg-amber-50 text-amber-700",
+      [TicketPriority.HIGH]: "border-red-200 bg-red-50 text-red-700",
+    };
+
+    return [baseClasses, priorityClasses[priority]].join(" ");
   }
 
   public formatDate(value: string): string {
