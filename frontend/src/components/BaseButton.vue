@@ -23,7 +23,7 @@ export default class BaseButton extends Vue {
   public type!: "button" | "submit" | "reset";
 
   @Prop({ type: String, default: "primary" })
-  public variant!: "primary" | "secondary";
+  public variant!: "primary" | "secondary" | "danger";
 
   @Prop({ type: Boolean, default: false })
   public fullWidth!: boolean;
@@ -40,14 +40,23 @@ export default class BaseButton extends Vue {
 
     const widthClasses = this.fullWidth ? "w-full" : "";
 
-    const variantClasses =
-      this.variant === "secondary"
-        ? "border border-blue-600 text-blue-600 hover:bg-blue-50"
-        : "bg-blue-600 text-white hover:bg-blue-700";
+    const variantClasses = this.getVariantClasses();
 
     return [baseClasses, widthClasses, variantClasses]
       .filter(Boolean) // remove valores "falsy" do array (false, 0, "", null, undefined, NaN) - neste caso string vazia
       .join(" "); // junta os itens do array em uma string, colocando um espaço entre eles
+  }
+
+  private getVariantClasses(): string {
+    if (this.variant === "secondary") {
+      return "border border-blue-600 text-blue-600 hover:bg-blue-50";
+    }
+
+    if (this.variant === "danger") {
+      return "bg-red-600 text-white hover:bg-red-700";
+    }
+
+    return "bg-blue-600 text-white hover:bg-blue-700";
   }
 }
 </script>

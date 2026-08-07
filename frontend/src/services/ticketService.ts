@@ -38,4 +38,8 @@ export const ticketService = {
 
     return response.data;
   },
+
+  async remove(id: number): Promise<void> {
+    await api.delete(`/tickets/${id}`);
+  },
 };

@@ -17,11 +17,30 @@
         </div>
 
         <div class="flex gap-3">
-          <BaseButton v-if="canEditTicket" @click="goToEdit">
+          <BaseButton
+            v-if="canEditTicket"
+            variant="danger"
+            :disabled="isDeleting"
+            @click="handleDeleteTicket"
+          >
+            {{ deleteButtonText }}
+          </BaseButton>
+
+          <BaseButton
+            v-if="canEditTicket"
+            :disabled="isDeleting"
+            @click="goToEdit"
+          >
             Editar
           </BaseButton>
 
-          <BaseButton variant="secondary" @click="goBack"> Voltar </BaseButton>
+          <BaseButton
+            variant="secondary"
+            :disabled="isDeleting"
+            @click="goBack"
+          >
+            Voltar
+          </BaseButton>
         </div>
       </header>
 
@@ -75,6 +94,13 @@
             </p>
           </div>
 
+          <p
+            v-if="deleteErrorMessage"
+            class="mb-6 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+          >
+            {{ deleteErrorMessage }}
+          </p>
+
           <div
             class="grid gap-4 border-t border-slate-200 pt-6 text-sm text-slate-600 md:grid-cols-2"
           >
@@ -121,6 +147,8 @@ export default class TicketDetailView extends Vue {
   public ticket: TicketResponse | null = null;
   public isLoading = false;
   public errorMessage = "";
+  public isDeleting = false;
+  public deleteErrorMessage = "";
 
   get ticketId(): number | null {
     const id = Number(this.$route.params.id);
@@ -146,6 +174,10 @@ export default class TicketDetailView extends Vue {
       this.currentUser !== null &&
       this.ticket.requester.id === this.currentUser.id
     );
+  }
+
+  get deleteButtonText(): string {
+    return this.isDeleting ? "Excluindo..." : "Excluir";
   }
 
   public mounted(): void {
@@ -186,6 +218,34 @@ export default class TicketDetailView extends Vue {
         id: String(this.ticket.id),
       },
     });
+  }
+
+  public async handleDeleteTicket(): Promise<void> {
+    if (!this.ticket || this.isDeleting || !this.canEditTicket) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      // eslint-disable-next-line prettier/prettier
+      "Tem certeza que deseja excluir este chamado? Esta ação não pode ser desfeita.",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.isDeleting = true;
+    this.deleteErrorMessage = "";
+
+    try {
+      await ticketService.remove(this.ticket.id);
+
+      void this.$router.push({ name: "tickets" });
+    } catch (error) {
+      this.deleteErrorMessage = this.getErrorMessage(error);
+    } finally {
+      this.isDeleting = false;
+    }
   }
 
   public goBack(): void {
