@@ -387,8 +387,7 @@ export default class TicketDetailView extends Vue {
     }
 
     const confirmed = window.confirm(
-      // eslint-disable-next-line prettier/prettier
-      "Tem certeza que deseja excluir este chamado? Esta ação não pode ser desfeita.",
+      "Tem certeza que deseja excluir este chamado? Esta ação não pode ser desfeita."
     );
 
     if (!confirmed) {
@@ -429,8 +428,7 @@ export default class TicketDetailView extends Vue {
     }
 
     const confirmed = window.confirm(
-      // eslint-disable-next-line prettier/prettier
-      "Tem certeza que deseja excluir este comentário?",
+      "Tem certeza que deseja excluir este comentário?"
     );
 
     if (!confirmed) {
@@ -444,8 +442,7 @@ export default class TicketDetailView extends Vue {
       await commentService.remove(this.ticketId, comment.id);
 
       this.comments = this.comments.filter(
-        // eslint-disable-next-line prettier/prettier
-        (currentComment) => currentComment.id !== comment.id,
+        (currentComment) => currentComment.id !== comment.id
       );
     } catch (error) {
       this.commentDeleteErrorMessage = this.getErrorMessage(error);

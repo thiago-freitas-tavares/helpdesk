@@ -4,8 +4,7 @@ import { CommentResponse, CreateCommentRequest } from "../types/comment";
 export const commentService = {
   async listByTicketId(ticketId: number): Promise<CommentResponse[]> {
     const response = await api.get<CommentResponse[]>(
-      // eslint-disable-next-line prettier/prettier
-      `/tickets/${ticketId}/comments`,
+      `/tickets/${ticketId}/comments`
     );
 
     return response.data;
@@ -13,13 +12,11 @@ export const commentService = {
 
   async create(
     ticketId: number,
-    // eslint-disable-next-line prettier/prettier
-    payload: CreateCommentRequest,
+    payload: CreateCommentRequest
   ): Promise<CommentResponse> {
     const response = await api.post<CommentResponse>(
       `/tickets/${ticketId}/comments`,
-      // eslint-disable-next-line prettier/prettier
-      payload,
+      payload
     );
 
     return response.data;
