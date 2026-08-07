@@ -186,6 +186,13 @@
         </p>
 
         <p
+          v-if="commentDeleteErrorMessage"
+          class="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"
+        >
+          {{ commentDeleteErrorMessage }}
+        </p>
+
+        <p
           v-else-if="!hasComments"
           class="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600"
         >
@@ -199,13 +206,24 @@
             class="rounded-xl border border-slate-200 p-4"
           >
             <div class="mb-2 flex items-center justify-between gap-4">
-              <p class="text-sm font-semibold text-slate-900">
-                {{ comment.author.name }}
-              </p>
+              <div>
+                <p class="text-sm font-semibold text-slate-900">
+                  {{ comment.author.name }}
+                </p>
 
-              <p class="text-xs text-slate-500">
-                {{ formatDate(comment.createdAt) }}
-              </p>
+                <p class="text-xs text-slate-500">
+                  {{ formatDate(comment.createdAt) }}
+                </p>
+              </div>
+
+              <BaseButton
+                v-if="canDeleteComment(comment)"
+                variant="danger"
+                :disabled="isDeletingCommentId !== null"
+                @click="handleDeleteComment(comment)"
+              >
+                {{ getCommentDeleteButtonText(comment.id) }}
+              </BaseButton>
             </div>
 
             <p class="whitespace-pre-line text-sm leading-6 text-slate-700">
@@ -241,9 +259,11 @@ export default class TicketDetailView extends Vue {
   public isLoadingComments = false;
   public isCreatingComment = false;
   public isDeleting = false;
+  public isDeletingCommentId: number | null = null;
   public errorMessage = "";
   public commentsErrorMessage = "";
   public commentErrorMessage = "";
+  public commentDeleteErrorMessage = "";
   public deleteErrorMessage = "";
 
   get ticketId(): number | null {
@@ -390,6 +410,51 @@ export default class TicketDetailView extends Vue {
       this.deleteErrorMessage = this.getErrorMessage(error);
     } finally {
       this.isDeleting = false;
+    }
+  }
+
+  public canDeleteComment(comment: CommentResponse): boolean {
+    return (
+      this.currentUser !== null && comment.author.id === this.currentUser.id
+    );
+  }
+
+  public getCommentDeleteButtonText(commentId: number): string {
+    return this.isDeletingCommentId === commentId ? "Excluindo..." : "Excluir";
+  }
+
+  public async handleDeleteComment(comment: CommentResponse): Promise<void> {
+    if (
+      this.ticketId === null ||
+      this.isDeletingCommentId !== null ||
+      !this.canDeleteComment(comment)
+    ) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      // eslint-disable-next-line prettier/prettier
+      "Tem certeza que deseja excluir este comentário?",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.isDeletingCommentId = comment.id;
+    this.commentDeleteErrorMessage = "";
+
+    try {
+      await commentService.remove(this.ticketId, comment.id);
+
+      this.comments = this.comments.filter(
+        // eslint-disable-next-line prettier/prettier
+        (currentComment) => currentComment.id !== comment.id,
+      );
+    } catch (error) {
+      this.commentDeleteErrorMessage = this.getErrorMessage(error);
+    } finally {
+      this.isDeletingCommentId = null;
     }
   }
 

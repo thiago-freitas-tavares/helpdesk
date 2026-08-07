@@ -1,4 +1,4 @@
-import { api } from "@/services/api";
+import { api } from "./api";
 import { CommentResponse, CreateCommentRequest } from "../types/comment";
 
 export const commentService = {
@@ -23,5 +23,9 @@ export const commentService = {
     );
 
     return response.data;
+  },
+
+  async remove(ticketId: number, commentId: number): Promise<void> {
+    await api.delete(`/tickets/${ticketId}/comments/${commentId}`);
   },
 };
